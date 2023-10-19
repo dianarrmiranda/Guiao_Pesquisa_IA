@@ -62,11 +62,12 @@ class SearchProblem:
 
 # Nos de uma arvore de pesquisa
 class SearchNode:
-    def __init__(self,state,parent, depth, cost): 
+    def __init__(self,state,parent, depth, cost, heuristic): 
         self.state = state
         self.parent = parent
         self.depth = depth
         self.cost = cost
+        self.heuristic = heuristic
 
     def __str__(self):
         return "no(" + str(self.state) + "," + str(self.parent) + ")"
@@ -88,13 +89,17 @@ class SearchTree:
     # construtor
     def __init__(self,problem, strategy='breadth'): 
         self.problem = problem
-        root = SearchNode(problem.initial, None, 0, 0)
+        root = SearchNode(problem.initial, None, 0, 0, 0)
         self.open_nodes = [root]
         self.strategy = strategy
         self.solution = None
         self.terminals = 0
         self.non_terminals = 0
-    
+        self.highest_cost_nodes = []
+        self.average_depth = 0
+        self.nodes = 0
+        self.totalDepth = 0
+
     @property 
     def length(self):
         return self.solution.depth
@@ -122,6 +127,7 @@ class SearchTree:
             node = self.open_nodes.pop(0)
             if self.problem.goal_test(node.state):
                 self.solution = node
+                self.average_depth = self.totalDepth / self.nodes
                 return self.get_path(node)
             
             lnewnodes = []
@@ -130,8 +136,17 @@ class SearchTree:
                 for a in self.problem.domain.actions(node.state):
                     newstate = self.problem.domain.result(node.state,a)
                     if not node.in_parent(newstate):
-                        newnode = SearchNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a)) #node.depth + 1 vai somar 1 à profundidade do node pai
+                        newnode = SearchNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate, self.problem.goal)) #node.depth + 1 vai somar 1 à profundidade do node pai
                         lnewnodes.append(newnode)
+                        
+                        self.nodes +=1
+                        self.totalDepth += newnode.depth 
+
+                        if not self.highest_cost_nodes or newnode.cost > self.highest_cost_nodes[0].cost:
+                            self.highest_cost_nodes = [newnode]
+                        elif newnode.cost == self.highest_cost_nodes[0].cost:
+                            self.highest_cost_nodes.append(newnode)
+                        
                 self.add_to_open(lnewnodes)
 
         return None
@@ -146,5 +161,13 @@ class SearchTree:
             for node in lnewnodes:
                 self.open_nodes.append(node)
                 self.open_nodes.sort(key=lambda node: node.cost)
+        elif self.strategy == 'greedy':
+            for node in lnewnodes:
+                self.open_nodes.append(node)
+                self.open_nodes.sort(key= lambda node: node.heuristic)
+        elif self.strategy == 'a*':
+            for node in lnewnodes:
+                self.open_nodes.append(node)
+                self.open_nodes.sort(key= lambda node: node.cost + node.heuristic)
 
 
