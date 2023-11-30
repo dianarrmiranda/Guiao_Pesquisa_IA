@@ -48,9 +48,25 @@ class ConstraintSearch:
                 for val in domains[var]:
                     newdomains = dict(domains)
                     newdomains[var] = [val]
+                    solution = self.propagate_constrains(newdomains, var, val)
+                    if newdomains is None:
+                        continue
+                    
                     solution = self.search(newdomains)
-                    if solution != None:
+                    if solution is not None:
                         return solution
         return None
-
+    
+    def propagate_constrains(self, domains, var, val):
+        for variable, domain in domains.items():
+            if variable == var:
+                continue
+            if (variable, var) in self.constraints.keys():
+                constraint = self.constraints[variable, var]
+                domains[variable] = [
+                    v for v in domain if constraint(variable, v, var, val)
+                ]
+                if not domains[variable]:
+                    return None
+        return domains
 

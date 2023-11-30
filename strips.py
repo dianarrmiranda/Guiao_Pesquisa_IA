@@ -93,7 +93,15 @@ class STRIPS(SearchDomain):
     # Result of a given "action" in a given "state"
     # ( returns None, if the action is not applicable in the state)
     def result(self, state, action):
-        pass
+        # validate pre conditions
+        if not all(p in state for p in action.pc):
+            return None
+
+        # negative effects
+        newstate = [p for p in state if p not in action.neg]
+        # positive effects
+        newstate.extend(action.pos)
+        return set(newstate)
 
     def cost(self, state, action):
         return 1
@@ -103,7 +111,7 @@ class STRIPS(SearchDomain):
 
     # Checks if a given "goal" is satisfied in a given "state"
     def satisfies(self, state, goal):
-        pass
+        return all(g in state for g in goal)
 
 
 

@@ -62,12 +62,13 @@ class SearchProblem:
 
 # Nos de uma arvore de pesquisa
 class SearchNode:
-    def __init__(self,state,parent, depth, cost, heuristic): 
+    def __init__(self,state,parent, depth, cost, heuristic, action): 
         self.state = state
         self.parent = parent
         self.depth = depth
         self.cost = cost
         self.heuristic = heuristic
+        self.action = action
 
     def __str__(self):
         return "no(" + str(self.state) + "," + str(self.parent) + ")"
@@ -89,7 +90,7 @@ class SearchTree:
     # construtor
     def __init__(self,problem, strategy='breadth'): 
         self.problem = problem
-        root = SearchNode(problem.initial, None, 0, 0, 0)
+        root = SearchNode(problem.initial, None, 0, 0, 0, None)
         self.open_nodes = [root]
         self.strategy = strategy
         self.solution = None
@@ -112,6 +113,10 @@ class SearchTree:
     def cost(self):
         return self.solution.cost
     
+    @property
+    def plan(self):
+        return self.get_plan(self.solution)
+    
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
@@ -119,6 +124,13 @@ class SearchTree:
         path = self.get_path(node.parent)
         path += [node.state]
         return(path)
+    
+    def get_plan(self,node):
+        if node.parent == None:
+            return []
+        plan = self.get_plan(node.parent)
+        plan += [node.action]
+        return(plan)
 
     # procurar a solucao
     def search(self, limit = None):
@@ -136,7 +148,7 @@ class SearchTree:
                 for a in self.problem.domain.actions(node.state):
                     newstate = self.problem.domain.result(node.state,a)
                     if not node.in_parent(newstate):
-                        newnode = SearchNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate, self.problem.goal)) #node.depth + 1 vai somar 1 à profundidade do node pai
+                        newnode = SearchNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate, self.problem.goal), a) #node.depth + 1 vai somar 1 à profundidade do node pai
                         lnewnodes.append(newnode)
                         
                         self.nodes +=1

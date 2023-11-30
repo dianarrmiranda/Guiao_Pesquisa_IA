@@ -18,22 +18,44 @@ from strips import *
 class Floor(Predicate):
     def __init__(self,block):
         self.args = [block]
+    
+    def __hash__(self):
+        return hash((self.args[0]))
 
 class On(Predicate):
     def __init__(self,b1,b2):
         self.args = [b1,b2]
 
+    def __hash__(self):
+        return hash((self.args[0]))
+
 class Free(Predicate):
     def __init__(self,block):
         self.args = [block]
+
+    def __hash__(self):
+        return hash((self.args[0]))
 
 class Holds(Predicate):
     def __init__(self,block):
         self.args = [block]
 
+    def __hash__(self):
+        return hash((self.args[0]))
+
 class HandFree(Predicate):
+    hash_int = 0
+
+    @staticmethod
+    def get_hash_int():
+        HandFree.hash_int += 1
+        return HandFree.hash_int
+    
     def __init__(self):
         self.args = []
+
+    def __hash__(self):
+        return hash((self.args[0] if len(self.args) > 0 else 0))
 
 
 # Blocks world operators
@@ -105,7 +127,6 @@ bwdomain = STRIPS()
 
 print('Actions:',bwdomain.actions(initial_state))
 
-"""
 # uncomment to test
 
 inittime = time.time()
@@ -117,6 +138,4 @@ t.search()
 print(t.plan)
 print('time=',time.time()-inittime)
 print(len(t.open_nodes),' nodes')
-"""
-
 
